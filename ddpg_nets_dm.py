@@ -10,8 +10,8 @@ def fanin_init(shape,fanin=None):
   return tf.random_uniform(shape,minval=-v,maxval=v)
 
 
-l1 = 400 # dm 400
-l2 = 300 # dm 300
+l1 = 200 # dm 400
+l2 = 200 # dm 300
 
 
 def theta_p(dimO,dimA):
@@ -24,7 +24,7 @@ def theta_p(dimO,dimA):
             tf.Variable(fanin_init([l2],l1),name='2b'),
             tf.Variable(tf.random_uniform([l2,dimA],-3e-3,3e-3),name='3w'),
             tf.Variable(tf.random_uniform([dimA],-3e-3,3e-3),name='3b')]
-  
+
 def policy(obs,theta,name='policy'):
   with tf.variable_op_scope([obs],name,name):
     h0 = tf.identity(obs,name='h0-obs')
@@ -47,7 +47,7 @@ def theta_q(dimO,dimA):
             tf.Variable(fanin_init([l2],l1+dimA),name='2b'),
             tf.Variable(tf.random_uniform([l2,1],-3e-4,3e-4),name='3w'),
             tf.Variable(tf.random_uniform([1],-3e-4,3e-4),name='3b')]
-    
+
 def qfunction(obs,act,theta, name="qfunction"):
   with tf.variable_op_scope([obs,act],name,name):
     h0 = tf.identity(obs,name='h0-obs')
@@ -57,6 +57,6 @@ def qfunction(obs,act,theta, name="qfunction"):
     h2  = tf.nn.relu( tf.matmul(h1a,theta[2]) + theta[3],name='h2')
     qs  = tf.matmul(h2,theta[4]) + theta[5]
     q = tf.squeeze(qs,[1],name='h3-q')
-    
+
     summary = hist_summaries(h0,h0a,h1,h2,q)
     return q,summary

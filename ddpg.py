@@ -6,11 +6,12 @@ import numpy as np
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_float('ou_sigma',0.2,'')
-flags.DEFINE_integer('warmup',50000,'time without training but only filling the replay memory')
+flags.DEFINE_integer('warmup',5000,'time without training but only filling the replay memory')
 flags.DEFINE_bool('warmq',True,'train Q during warmup time')
 flags.DEFINE_float('log',.01,'probability of writing a tensorflow log at each timestep')
 flags.DEFINE_integer('bsize',32,'minibatch size')
 flags.DEFINE_bool('async',True,'update policy and q function concurrently')
+flags.DEFINE_integer('iter', 5, 'train iterations each timestep')
 
 # ...
 # TODO: make command line options
@@ -30,7 +31,7 @@ threads = 4
 
 
 # DDPG Agent
-# 
+#
 class Agent:
 
   def __init__(self, dimO, dimA):
@@ -115,7 +116,7 @@ class Agent:
 
     # init replay memory for recording episodes
     max_ep_length = 10000
-    self.rm_log = ReplayMemory(max_ep_length,dimO,dimA,rm_dtype) 
+    self.rm_log = ReplayMemory(max_ep_length,dimO,dimA,rm_dtype)
 
     # tf functions
     with self.sess.as_default():
@@ -164,7 +165,8 @@ class Agent:
       elif FLAGS.warmq and self.rm.n > 1000:
         # Train Q on warmup
         obs, act, rew, ob2, term2, info = self.rm.minibatch(size=FLAGS.bsize)
-        self._train_q(obs,act,rew,ob2,term2, log = (np.random.rand() < FLAGS.log), global_step=self.t)
+        for i in xrange(FLAGS.iter):
+          self._train_q(obs,act,rew,ob2,term2, log = (np.random.rand() < FLAGS.log), global_step=self.t)
 
       # save parameters etc.
       # if (self.t+45000) % 50000 == 0: # TODO: correct
@@ -176,10 +178,12 @@ class Agent:
     log = (np.random.rand() < FLAGS.log)
 
     if FLAGS.async:
-      self._train(obs,act,rew,ob2,term2, log = log, global_step=self.t)
+      for i in xrange(FLAGS.iter):
+        self._train(obs,act,rew,ob2,term2, log = log, global_step=self.t)
     else:
-      self._train_q(obs,act,rew,ob2,term2, log = log, global_step=self.t)
-      self._train_p(obs, log = log, global_step=self.t)
+      for i in xrange(FLAGS.iter):
+        self._train_q(obs,act,rew,ob2,term2, log = log, global_step=self.t)
+        self._train_p(obs, log = log, global_step=self.t)
 
   def write_scalar(self,tag,val):
     s = tf.Summary(value=[tf.Summary.Value(tag=tag,simple_value=val)])
@@ -216,7 +220,7 @@ class Fun:
 
     out = self._outputs + [self._summary_op] if log else self._outputs
     res = self._session.run(out, feeds)
-    
+
     if log:
       i = kwargs['global_step']
       self._writer.add_summary(res[-1],global_step=i)
