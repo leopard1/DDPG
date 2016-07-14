@@ -61,7 +61,7 @@ class Experiment:
                 self.t_test += 1
             avr = np.mean(R)
             print('Average test return\t{} after {} episodes of training'.format(avr, self.t_train))
-            print >> simplelog, "%d\t%d" % (self.t_train, avr)
+            print >> simplelog, "%d\t%.2f" % (self.t_train, avr)
 
             # evaluate required number of episodes for gym and end training when above threshold
             if self.env.spec.reward_threshold is not None and avr > self.env.spec.reward_threshold:
