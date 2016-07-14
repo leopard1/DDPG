@@ -7,17 +7,16 @@ from replay_memory import ReplayMemory
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_float('ou_sigma', 0.2, '')
-flags.DEFINE_integer('warmup', 50000, 'time without training but only filling the replay memory')
+flags.DEFINE_integer('warmup', 1000, 'time without training but only filling the replay memory')
 flags.DEFINE_float('log', .01, 'probability of writing a tensorflow log at each timestep')
 flags.DEFINE_integer('bsize', 32, 'minibatch size')
+flags.DEFINE_integer('iter', 5, 'train iters each timestep')
 
 # ...
 # TODO: make command line options
 tau = .001
 discount = .99
-pl2 = .0
 ql2 = .01
-lrp = .0001
 lrq = .001
 ou_theta = 0.15
 ou_sigma = 0.2
@@ -105,10 +104,6 @@ class Agent:
         # initialize tf log writer
         self.writer = tf.train.SummaryWriter(FLAGS.outdir + "/tf", self.sess.graph, flush_secs=20)
 
-        # init replay memory for recording episodes
-        max_ep_length = 10000
-        self.rm_log = ReplayMemory(max_ep_length, dimO, dimA, rm_dtype)
-
         # tf functions
         with self.sess.as_default():
             self._act_test = Fun(obs, act_test)
@@ -149,7 +144,8 @@ class Agent:
             self.rm.enqueue(obs1, term, self.action, rew)
 
             if self.t > FLAGS.warmup:
-                self.train()
+                for i in xrange(FLAGS.iter):
+                    self.train()
 
             # save parameters etc.
             # if (self.t+45000) % 50000 == 0: # TODO: correct

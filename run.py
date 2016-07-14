@@ -11,7 +11,7 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('upload', False, 'upload to gym (requires evironment variable OPENAI_GYM_API_KEY)')
 flags.DEFINE_string('env', '', 'gym environment')
-flags.DEFINE_integer('train', 100, 'training episodes between tests. use 0 for test run only')
+flags.DEFINE_integer('train', 10, 'training episodes between tests. use 0 for test run only')
 flags.DEFINE_integer('test', 1, 'testing episodes between training')
 flags.DEFINE_integer('tmax', 10000, 'maximum timesteps per episode')
 flags.DEFINE_bool('random', False, 'use random agent')
@@ -48,7 +48,7 @@ class Experiment:
 
         self.agent = ddpg.Agent(dimO=dimO, dimA=dimA)
 
-        returns = []
+        simplelog = open(FLAGS.outdir + '/log.txt', 'w')
 
         # main loop
         while self.t_train < FLAGS.total:
@@ -61,6 +61,7 @@ class Experiment:
                 self.t_test += 1
             avr = np.mean(R)
             print('Average test return\t{} after {} episodes of training'.format(avr, self.t_train))
+            print >> simplelog, "%d\t%d" % (self.t_train, avr)
 
             # evaluate required number of episodes for gym and end training when above threshold
             if self.env.spec.reward_threshold is not None and avr > self.env.spec.reward_threshold:

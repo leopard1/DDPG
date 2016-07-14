@@ -12,8 +12,8 @@ def fanin_init(shape, fanin=None):
     return tf.random_uniform(shape, minval=-v, maxval=v)
 
 
-l1 = 400  # dm 400
-l2 = 300  # dm 300
+l1 = 200  # dm 200
+l2 = 200  # dm 200
 
 
 def theta(dimIn, dimOut, scope, v):
@@ -59,7 +59,7 @@ def afunction(action, lvalue, uvalue, dimA, name="afunction"):
         h1 = tf.batch_matmul(h1, L) # batch:1:dimA
         h1 = tf.squeeze(h1, [1]) #batch:dimA
         h2 = -0.5 * tf.reduce_sum(h1 * h1, 1) #batch
-        
+
         summary = hist_summaries(h0d, L, h2)
         return h2, summary
 
